@@ -309,3 +309,47 @@ def preds_to_ground_truth(preds: tp.Dict[str, tp.List], score_thr: float):
         )
 
     return ground_truths
+
+
+def scale_coordinates(value_dict, original_width, original_height):
+    """
+    Scales the coordinates in the given 'value_dict' based on the original
+    width and height. The scaling is performed using a scaling vector
+    calculated as a percentage of the original width and height.
+
+    Parameters:
+    - value_dict (dict): A dictionary containing 'x', 'y', 'width', and
+                    'height' keys representing the original coordinates.
+    - original_width (int or float): The original width of the coordinate
+    `                               system.
+    - original_height (int or float): The original height of the coordinate
+                                    system.
+
+    Returns:
+    - numpy.ndarray: An array containing the scaled coordinates
+                     [x_scaled, y_scaled, width_scaled, height_scaled].
+    """
+
+    # Calculate the scaling vector based on the original width and height
+    scaling_vector = np.array(
+        [
+            original_width / 100,
+            original_height / 100,
+            original_width / 100,
+            original_height / 100,
+        ]
+    )
+
+    # Extract original coordinates from the dictionary
+    x_original = value_dict["x"]
+    y_original = value_dict["y"]
+    w_original = value_dict["width"]
+    h_original = value_dict["height"]
+
+    # Create an array with the original coordinates
+    original_coordinate = np.array([x_original, y_original, w_original, h_original])
+
+    # Scale the original coordinates using the scaling vector
+    example_scaled = original_coordinate * scaling_vector
+
+    return example_scaled
