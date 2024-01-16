@@ -3,6 +3,9 @@ import typing as tp
 from functools import partial
 
 import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
+import matplotlib.patches as patches
+
 import numpy as np
 import PIL
 import torch
@@ -353,3 +356,93 @@ def scale_coordinates(value_dict, original_width, original_height):
     example_scaled = original_coordinate * scaling_vector
 
     return example_scaled
+
+
+def plot_bounding_boxes(
+    image_path,
+    ground_truth_boxes,
+    predicted_boxes=torch.tensor([]),
+    title="Bounding Boxes",
+):
+    """
+    Display an image with two sets of bounding boxes (ground truth and predictions).
+
+    Parameters:
+    - image_path (str): Path to the image file.
+    - ground_truth_boxes (torch.Tensor): Tensor representing ground truth bounding 
+                                        boxes,shape (num_boxes, 4), format 
+                                        (x, y, width, height).
+    - predicted_boxes (torch.Tensor): Tensor representing predicted bounding boxes,
+                                      shape (num_boxes, 4), format 
+                                      (x, y, width, height).
+    - title (str): Title for the plot (default is 'Bounding Boxes').
+    """
+    # Read the image
+    img = PIL.Image.open(image_path)
+    # Create a figure and axis
+    fig, ax = plt.subplots(1, figsize=(13, 8))
+    ax.imshow(img)
+
+    # Plot ground truth bounding boxes
+    for box in ground_truth_boxes:
+        rect = patches.Rectangle(
+            (box[0], box[1]),
+            box[2] - box[0],
+            box[3] - box[1],
+            linewidth=2,
+            edgecolor="g",
+            facecolor="none",
+            linestyle="--",
+            alpha=0.7,
+            label="Ground Truth",
+        )
+        ax.add_patch(rect)
+
+    ground_truth_line = mlines.Line2D(
+        [], [], linestyle="--", color="green", label="Ground Truth"
+    )
+
+    # Plot predicted bounding boxes
+    if predicted_boxes.shape[0] > 0:
+        detection_line = mlines.Line2D([], [], color="red", label="Detections")
+        for box in predicted_boxes:
+            rect = patches.Rectangle(
+                (box[0], box[1]),
+                box[2] - box[0],
+                box[3] - box[1],
+                linewidth=2,
+                edgecolor="r",
+                facecolor="none",
+                linestyle="-",
+                alpha=0.7,
+                label="Predictions",
+            )
+            ax.add_patch(rect)
+
+        # Add labels for ground truth and predictions
+        # Place the legend outside the image
+        ax.legend(
+            handles=[detection_line, ground_truth_line],
+            loc="upper center",
+            bbox_to_anchor=(0.5, 1.07),
+            ncols=2,
+            frameon=False,
+        )
+    else:
+        ax.legend(
+            handles=[ground_truth_line],
+            loc="upper center",
+            bbox_to_anchor=(0.5, 1.07),
+            ncols=2,
+            frameon=False,
+        )
+
+    # Remove axis values
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+    # Set plot title
+    ax.set_title(title, x=0.5, y=1.075, fontsize=15)
+    # Display the plot
+    plt.show()
